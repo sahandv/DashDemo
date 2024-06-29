@@ -54,7 +54,7 @@ def update_graph(value):
     else:
         dff = df[df.country==value]
     
-    line_graph = px.line(dff, x='year', y='pop')
+    line_graph = px.line(dff, x='year', y='lifeExp')
     table_output = dff.to_dict('records')
 
     # Latest life expectancy map

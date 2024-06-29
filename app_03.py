@@ -34,7 +34,7 @@ def update_graph(value):
         dff = df[df.country==value]
         
     return [
-        px.line(dff, x='year', y='pop'),
+        px.line(dff, x='year', y='lifeExp'),
         dff.to_dict('records')]
 
 if __name__ == '__main__':

@@ -66,7 +66,7 @@ def update_graph(dropdown_value,click_data):
     else:
         dff = df[df.country==value]
     
-    line_graph = px.line(dff, x='year', y='pop')
+    line_graph = px.line(dff, x='year', y='lifeExp')
     table_output = dff.to_dict('records')
 
     # Latest life expectancy map
@@ -82,6 +82,7 @@ def update_graph(dropdown_value,click_data):
         locations=df_latest.index,
         color='lifeExp', 
         hover_name='country',  
+        hover_data=['pop','year'],
         mapbox_style="carto-positron",
         zoom=1,
         center={"lat": 0, "lon": 0},
