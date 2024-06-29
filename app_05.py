@@ -3,7 +3,7 @@ https://dash.plotly.com/minimal-app
 
 Interactive app with multiple outputs
 """
-from dash import Dash, html, dcc, callback, Output, Input, dash_table
+from dash import Dash, html, dcc, callback, Output, Input, dash_table, callback_context
 import plotly.express as px
 import pandas as pd
 import geopandas as gpd
@@ -15,26 +15,26 @@ SECRETS = json.load(open("secrets/secrets.json"))
 MAPBOX_ACCESS_TOKEN = SECRETS["MAPBOX_ACCESS_TOKEN"]
 
 # Load geopandas world dataset
-MAPFILE = 'data/countries.geojson' # 'data/world/ne_110m_admin_0_countries.shp'
+MAPFILE = 'data/countries.geojson' 
 gdf = gpd.read_file(MAPFILE)
 gdf = gdf.rename(columns={'ADMIN':'country'})
 gdf['country'] = gdf['country'].str.lower()
 
 
 # Merge the dataframes
-df_geo = df.merge(gdf, how='left', left_on='country', right_on='country')
-
-
+df_geo = gdf.merge(df, how='left', left_on='country', right_on='country')
+df_geo.country = df_geo.country.str.capitalize()
+df.country = df.country.str.capitalize()
 
 app = Dash()
 
 app.layout = [
-    html.H1(children='Test 3', style={'textAlign':'center'}),
+    html.H1(children='Test 5', style={'textAlign':'center'}),
     dcc.Dropdown(list(df.country.unique())+["All"], 'All', id='dropdown-selection'),
     html.Br(),
     dash_table.DataTable(data=df.to_dict('records'), page_size=10,id='table-content'),
+    dcc.Graph(id='map-content'),
     dcc.Graph(id='graph-content'),
-    dcc.Graph(id='map-content')
 ]
 
 
@@ -42,11 +42,25 @@ app.layout = [
     [
         Output('graph-content', 'figure'),
         Output('table-content', 'data'),
+        Output('dropdown-selection', 'value'),
         Output('map-content', 'figure')
     ],
-    Input('dropdown-selection', 'value')
+    [
+        Input('dropdown-selection', 'value'),
+        Input('map-content', 'clickData')
+    ]
 )
-def update_graph(value):
+def update_graph(dropdown_value,click_data):
+    print('=====================')
+    ctx = callback_context
+    triggered_by = ctx.triggered[0]['prop_id'].split('.')[0]
+
+    if triggered_by == 'map-content' and click_data:
+        country_name = click_data['points'][0]['hovertext']
+        value = country_name
+    else:
+        value = dropdown_value
+        
     if value == 'All' or value is None:
         dff = df
     else:
@@ -54,34 +68,34 @@ def update_graph(value):
     
     line_graph = px.line(dff, x='year', y='pop')
     table_output = dff.to_dict('records')
-    # print("geojson: ", geojson.head())
 
     # Latest life expectancy map
     latest_year = df['year'].max()
     df_latest = df_geo[df_geo['year'] == latest_year]
-    print("Latest year: ", latest_year)
-    print(df_latest.head())
-    df_latest = gpd.GeoDataFrame(df_latest,geometry='geometry')
-    df_latest = df_latest.to_crs(epsg=4326).__geo_interface__
+    df_latest = df_latest.dropna(subset=['lifeExp'])
+    print("Latest year: \n", latest_year)
+    print("Head:\n",df_latest.head())
+
     fig_map = px.choropleth_mapbox(
         df_latest,
         geojson=df_latest.geometry,
         locations=df_latest.index,
-        color='lifeExp',
-        hover_name='country',
-        hover_data={'geometry': False},
+        color='lifeExp', 
+        hover_name='country',  
         mapbox_style="carto-positron",
         zoom=1,
         center={"lat": 0, "lon": 0},
     )
     fig_map.update_layout(
         title_text='Latest Life Expectancy',
-        margin={"r":0,"t":0,"l":0,"b":0}, 
         mapbox_accesstoken=MAPBOX_ACCESS_TOKEN)
-    
+
+    print("returning value: ", value)
+
     return [
         line_graph,
         table_output,
+        value,
         fig_map
         ]
 
