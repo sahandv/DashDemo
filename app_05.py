@@ -18,7 +18,7 @@ MAPBOX_ACCESS_TOKEN = SECRETS["MAPBOX_ACCESS_TOKEN"]
 MAPFILE = 'data/countries.geojson' 
 gdf = gpd.read_file(MAPFILE)
 gdf = gdf.rename(columns={'ADMIN':'country'})
-gdf['country'] = gdf['country'].str.lower()
+gdf['country'] = gdf['country'].str.lower().replace('united states of america', 'united states')
 
 
 # Merge the dataframes
