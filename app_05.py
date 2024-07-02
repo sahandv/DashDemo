@@ -1,12 +1,12 @@
 """ Samples partially taken from plotly documentation 
 https://dash.plotly.com/minimal-app
 
-Interactive app with multiple outputs
+Interactive app with multiple outputs, map, and cross-filtering
 """
 from dash import Dash, html, dcc, callback, Output, Input, dash_table, callback_context
 import plotly.express as px
-import pandas as pd
-import geopandas as gpd
+import pandas as pd # type: ignore
+import geopandas as gpd # type: ignore
 import json
 
 df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/gapminder_unfiltered.csv')
